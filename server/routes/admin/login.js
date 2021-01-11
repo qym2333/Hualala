@@ -31,7 +31,6 @@ module.exports = (app, plugin, model, config) => {
                     ...doc[0],
                     password: '',
                 }
-                console.log("🚀 ~ file: login.js ~ line 31 ~ router.post ~ user", user)
                 //根据用户信息生成令牌
                 const token = jwt.sign(user, config.secretKey, {
                     expiresIn: config.expiresIn
@@ -52,13 +51,16 @@ module.exports = (app, plugin, model, config) => {
         if (!userinfo.username || !userinfo.password) {
             return res.cc('用户名或密码不能为空！');
         }
-        const len = await User.find().countDocuments();
-        console.log(len);
+        const len = await User.find().countDocuments(); //user表中是否存在数据，len=1
+        // User.find({
+        //     username: userinfo.username
+        // }, (err, doc) => {
+        //     console.log(doc);
+        // });
         //加密用户密码，bcrypt.hashSync('明文'，随机盐长度)
         userinfo.password = bcrypt.hashSync(userinfo.password, 10);
-
         if (len) {
-            res.cc('该用户已存在！');
+            res.cc('只允许存在一个管理员！');
         } else {
             // 创建账号
             await User.create(userinfo, (err, doc) => {
@@ -67,7 +69,7 @@ module.exports = (app, plugin, model, config) => {
                 } else {
                     res.cc('创建失败,请检查数据库或服务器是否正常！')
                 }
-            })
+            });
         }
     });
 
