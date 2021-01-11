@@ -28,8 +28,8 @@ module.exports = (app, plugin, model, config) => {
                 }
                 //获取当前登录user并去除密码内容
                 const user = {
-                    ...doc[0],
-                    password: '',
+                    ...doc[0]._doc,
+                    password: ''
                 }
                 //根据用户信息生成令牌
                 const token = jwt.sign(user, config.secretKey, {
@@ -38,7 +38,7 @@ module.exports = (app, plugin, model, config) => {
                 res.json({
                     status: 0,
                     message: '登录成功！',
-                    token: 'Bearer ' + token
+                    token: token
                 });
             } else {
                 res.cc('用户不存在！');
@@ -52,11 +52,6 @@ module.exports = (app, plugin, model, config) => {
             return res.cc('用户名或密码不能为空！');
         }
         const len = await User.find().countDocuments(); //user表中是否存在数据，len=1
-        // User.find({
-        //     username: userinfo.username
-        // }, (err, doc) => {
-        //     console.log(doc);
-        // });
         //加密用户密码，bcrypt.hashSync('明文'，随机盐长度)
         userinfo.password = bcrypt.hashSync(userinfo.password, 10);
         if (len) {
@@ -72,6 +67,32 @@ module.exports = (app, plugin, model, config) => {
             });
         }
     });
-
+    //修改密码
+    router.post('/password', (req, res) => {
+        const _id = req.user._id; //获取token中的用户id
+        const info = req.body;
+        User.find({
+            _id
+        }, (err, doc) => {
+            if (err) return res.cc('查询出错');
+            if (doc.length != 0) {
+                const cmpResult = bcrypt.compareSync(info.password, doc[0].password);
+                if (!cmpResult) {
+                    return res.cc('原密码错误！');
+                }
+                //加密新密码
+                info.newpassword = bcrypt.hashSync(info.newpassword, 10);
+                //根据id修改password
+                User.findByIdAndUpdate(_id, {
+                    password: info.newpassword
+                }, (err, doc) => {
+                    if (err) return res.cc('修改失败！');
+                    res.cc('修改成功！', 0);
+                })
+            } else {
+                res.cc('用户不存在！');
+            }
+        });
+    });
     app.use('/admin/api', router);
 }

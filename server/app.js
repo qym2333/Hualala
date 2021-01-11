@@ -42,19 +42,6 @@ app.use(expressJwt({
     // path: [/^\/api\//]
 }));
 
-// 全局错误中间件
-app.use((err, req, res, next) => {
-    //Token过期
-    if (err.name === 'UnauthorizedError') {
-        res.status(err.status || 401);
-        res.send({
-            message: 'token过期，请重新登录！',
-            code: 401,
-            time: err.inner.expiredAt
-        });
-        return;
-    }
-});
 /**
  *  全局方法
  * 接口模块
@@ -86,6 +73,21 @@ fs.readdirSync(dirname).forEach((i) => {
             require(file + '/' + name)(app, global['plugins'], global['models'], config);
         });
     }
+});
+
+// 全局错误中间件
+app.use((err, req, res, next) => {
+    //Token过期
+    if (err.name === 'UnauthorizedError') {
+        res.status(err.status || 401);
+        res.send({
+            message: 'token过期，请重新登录！',
+            code: 401,
+            time: err.inner.expiredAt
+        });
+        return;
+    }
+    res.cc(err);
 });
 
 require('./plugins/db')(app);
