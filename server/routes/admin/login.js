@@ -2,12 +2,10 @@ module.exports = (app, plugin, model, config) => {
     const express = require('express');
     const router = express.Router();
 
-    let {
+    const {
         User
     } = model;
-    let {
-        requestResult
-    } = plugin;
+
 
     const bcrypt = require('bcryptjs');
     const jwt = require('jsonwebtoken');
@@ -67,7 +65,8 @@ module.exports = (app, plugin, model, config) => {
             });
         }
     });
-    //修改密码
+    //修改密码 
+    //原密码：password / 新密码：newpassword
     router.post('/password', (req, res) => {
         const _id = req.user._id; //获取token中的用户id
         const info = req.body;

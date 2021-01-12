@@ -50,12 +50,12 @@ const fileName = ['plugins', 'models'];
 const global = fs.readdirSync(__dirname).filter(i => fileName.includes(i)).reduce((total, item) => {
     const files = fs.readdirSync(__dirname + '/' + item)
     files.map(i => {
-        let name = i.replace('.js', '')
-        let nameKey = i.replace('.js', '')
+        let name = i.replace('.js', '');
+        let nameKey = i.replace('.js', '');
         if (item == 'models') {
-            nameKey = name.replace(/^\S/, s => s.toUpperCase())
+            nameKey = name.replace(/^\S/, s => s.toUpperCase());
         }
-        total[item][nameKey] = require(__dirname + '/' + item + '/' + name)
+        total[item][nameKey] = require(__dirname + '/' + item + '/' + name);
     })
     return total
 }, {
