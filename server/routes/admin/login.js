@@ -6,6 +6,9 @@ module.exports = (app, plugin, model, config) => {
         User
     } = model;
 
+    const {
+        requestResult
+    } = plugin;
 
     const bcrypt = require('bcryptjs');
     const jwt = require('jsonwebtoken');
@@ -14,7 +17,8 @@ module.exports = (app, plugin, model, config) => {
     router.post('/login', async (req, res) => {
         const userinfo = req.body; //用户提交的账号密码
         if (!userinfo.username || !userinfo.password) {
-            return res.cc('用户名或密码不能为空！');
+            // return res.cc('用户名或密码不能为空！');
+            return res.send(requestResult('用户名或密码不能为空！'));
         }
         User.find({
             username: userinfo.username
@@ -22,7 +26,7 @@ module.exports = (app, plugin, model, config) => {
             if (doc.length != 0) {
                 const cmpResult = bcrypt.compareSync(userinfo.password, doc[0].password);
                 if (!cmpResult) {
-                    return res.cc('密码错误！');
+                    return res.send(requestResult('密码错误'));
                 }
                 //获取当前登录user并去除密码内容
                 const user = {
@@ -39,7 +43,7 @@ module.exports = (app, plugin, model, config) => {
                     token: token
                 });
             } else {
-                res.cc('用户不存在！');
+                res.send(requestResult('用户不存在！'));
             }
         });
     });
@@ -47,20 +51,20 @@ module.exports = (app, plugin, model, config) => {
     router.post('/register', async (req, res) => {
         const userinfo = req.body;
         if (!userinfo.username || !userinfo.password) {
-            return res.cc('用户名或密码不能为空！');
+            return res.send(requestResult('用户名或密码不能为空！'));
         }
         const len = await User.find().countDocuments(); //user表中是否存在数据，len=1
         //加密用户密码，bcrypt.hashSync('明文'，随机盐长度)
         userinfo.password = bcrypt.hashSync(userinfo.password, 10);
         if (len) {
-            res.cc('只允许存在一个管理员！');
+            res.send(requestResult('只允许存在一个管理员！'));
         } else {
             // 创建账号
             await User.create(userinfo, (err, doc) => {
                 if (doc.length != 0) {
-                    res.cc('注册成功！', 0);
+                    res.send(requestResult('注册成功！', 0));
                 } else {
-                    res.cc('创建失败,请检查数据库或服务器是否正常！')
+                    res.send(requestResult('创建失败,请检查数据库或服务器是否正常！'));
                 }
             });
         }
@@ -73,11 +77,11 @@ module.exports = (app, plugin, model, config) => {
         User.find({
             _id
         }, (err, doc) => {
-            if (err) return res.cc('查询出错');
+            if (err) return res.send(requestResult('创建失败,查询出错！'));
             if (doc.length != 0) {
                 const cmpResult = bcrypt.compareSync(info.password, doc[0].password);
                 if (!cmpResult) {
-                    return res.cc('原密码错误！');
+                    return res.send(requestResult('原密码错误！'));
                 }
                 //加密新密码
                 info.newpassword = bcrypt.hashSync(info.newpassword, 10);
@@ -85,11 +89,11 @@ module.exports = (app, plugin, model, config) => {
                 User.findByIdAndUpdate(_id, {
                     password: info.newpassword
                 }, (err, doc) => {
-                    if (err) return res.cc('修改失败！');
-                    res.cc('修改成功！', 0);
+                    if (err) return res.send(requestResult('修改失败！'));
+                    res.send(requestResult('修改成功！', 0));
                 })
             } else {
-                res.cc('用户不存在！');
+                res.send(requestResult('用户不存在！'));
             }
         });
     });

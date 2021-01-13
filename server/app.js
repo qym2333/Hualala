@@ -16,21 +16,6 @@ app.use(express.urlencoded({
 app.use('/uploads', express.static(__dirname + '/uploads'));
 
 /**
- * 配置返回客户端响应信息
- * @param {*} msg 提示信息 
- * @param {number} [status=1] 状态码 默认1：失败，0：成功
- */
-app.use((req, res, next) => {
-    res.cc = function (msg, status = 1) {
-        res.json({
-            status,
-            message: msg instanceof Error ? msg.message : msg,
-        });
-    }
-    next();
-});
-
-/**
  * 验证token
  * 跳过用户接口
  */
@@ -87,7 +72,7 @@ app.use((err, req, res, next) => {
         });
         return;
     }
-    res.cc(err);
+    res.send(err.message);
 });
 
 require('./plugins/db')(app);
